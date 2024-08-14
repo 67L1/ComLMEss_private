@@ -100,3 +100,23 @@ def set_seed(seed):
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
+
+
+class DefaultConfig(object):
+
+    save_fpr_tpr_path = 'final_ComLMEss_fpr_tpr.pkl'
+    save_pre_rec_path = 'final_ComLMEss_pre_rec.pkl'
+
+    seed = 323
+    kfold = 5
+    patience = 20
+    lr = 0.0001
+    batch_szie = 128
+    dropout = 0.3
+    filter = 64
+    activation = 'relu'
+    optimizer = 'Adam'
+    kernel_size_onto = 5
+    kernel_size_prot = 5
+    kernel_size_esm = 5
+    T = 5

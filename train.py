@@ -8,27 +8,14 @@ from tqdm import tqdm
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from sklearn.model_selection import StratifiedKFold
 from evaluation import compute_metrics, best_acc_thr
-from utils import initialize_model, load_all_features, save_pre_rec, save_fpr_tpr, set_seed, MySampler
+from utils import initialize_model, load_all_features, save_pre_rec, save_fpr_tpr, set_seed, MySampler, DefaultConfig
 
-config = {
-    'seed': 323,
-    'lr': 0.0001,
-    'batch_size': 128,
-    'dropout': 0.3,
-    'filter': 64,
-    'activation': 'relu',
-    'optimizer': 'Adam',
-    'kernel_size_onto': 5,
-    'kernel_size_prot': 5,
-    'kernel_size_esm': 5,
-    'T': 5,
 
-}
 
-save_fpr_tpr_path = 'final_ComLMEss_fpr_tpr.pkl'
-save_pre_rec_path = 'final_ComLMEss_pre_rec.pkl'
+
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 print(device)
+config = DefaultConfig()
 
 
 class ProteinDataset(Dataset):
@@ -153,9 +140,9 @@ def train(model, X_onto_train, X_onto_test,X_prot_train, X_prot_test,
     val_auprs, test_auprs = [], []
     val_aucs, test_aucs = [], []
     test_trues, kfold_test_scores = [], []
-    kfold = 5
-    patience = 20
-    skf = StratifiedKFold(n_splits=kfold, random_state=config['seed'], shuffle=True)
+    kfold = config.kfold
+    patience = config.patience
+    skf = StratifiedKFold(n_splits=kfold, random_state=config.seed, shuffle=True)
     for i, (train_index, val_index) in enumerate(skf.split(X_onto_train.cpu(), y_train.cpu())):
         print(f'\nStart training CV fold {i + 1}:')
         train_sampler, val_sampler = MySampler(train_index), MySampler(val_index)
@@ -267,8 +254,8 @@ def train(model, X_onto_train, X_onto_test,X_prot_train, X_prot_test,
      final_mcc, final_AUC, final_AUPR, final_fpr, final_tpr, final_p, final_r) = compute_metrics(test_trues, final_test_scores, best_acc_threshold)
 
 
-    save_fpr_tpr(save_fpr_tpr_path, final_fpr, final_tpr, final_AUC)
-    save_pre_rec(save_pre_rec_path, final_p, final_r, final_AUPR)
+    save_fpr_tpr(config.save_fpr_tpr_path, final_fpr, final_tpr, final_AUC)
+    save_pre_rec(config.save_pre_rec_path, final_p, final_r, final_AUPR)
 
     return final_acc, final_f1, final_pre, final_rec, final_mcc, final_AUC, final_AUPR, final_fpr, final_tpr
 
@@ -323,16 +310,16 @@ if __name__ == '__main__':
     X_onto_train, X_prot_train, X_esm_train, y_train, X_onto_test, X_prot_test, X_esm_test, y_test = load_all_features(device)
 
     # model
-    model = ComLMEss(kernel_size_onto=config['kernel_size_onto'],
-                     kernel_size_prot=config['kernel_size_prot'],
-                     kernel_size_esm=config['kernel_size_esm'],
-                     dropout=config['dropout'],
-                     num_filters=config['filter'],
-                     activation=config['activation'])
+    model = ComLMEss(kernel_size_onto=config.kernel_size_onto,
+                     kernel_size_prot=config.kernel_size_prot,
+                     kernel_size_esm=config.kernel_size_esm,
+                     dropout=config.dropout,
+                     num_filters=config.filter,
+                     activation=config.activation)
 
 
     # param
-    threshold, epoch_num, batch_size, lr, optimizer, T = 0.5, 500, config['batch_size'], config['lr'], config['optimizer'], config['T']
+    threshold, epoch_num, batch_size, lr, optimizer, T = 0.5, 500, config.batch_szie, config.lr, config.optimizer, config.T
     path_dir = './saved_models'
     result_file = 'results.csv'
     if not os.path.exists(path_dir):
