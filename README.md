@@ -1,5 +1,5 @@
 # ComLMEss_private
-An Ensemble Deep Learning Model For Predicting Essential Protein Task
+An Deep Learning Model For Predicting Essential Protein Task
 
 This repository contains the PyTorch implementation of 论文名.
 
